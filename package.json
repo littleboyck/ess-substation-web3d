@@ -1,0 +1,11 @@
+{
+  "name": "ess-substation-web3d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "储能变电站 3x4 ESS 机群 · three.js WebGPU 实时渲染",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "license": "MIT"
+}
