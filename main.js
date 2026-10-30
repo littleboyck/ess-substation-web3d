@@ -319,7 +319,15 @@ $('sun').addEventListener('input', (e) => {
   $('sunVal').textContent = e.target.value + '°';
 });
 
-const state = { rotate: false, shadow: true, fog: true };
+// 风机叶轮：每台一个独立节点，绕自身 +Z 轴（= 箱体侧壁法线）自转
+const fanBlades = [];
+model.traverse(o => { if (o.name && o.name.startsWith('风叶_')) fanBlades.push(o); });
+const FAN_RPS = 0.55;                       // 转/秒
+const fanSpeed = FAN_RPS * Math.PI * 2;     // rad/s
+fanBlades.forEach((b, i) => { b.userData.phase = (i % 3) * 0.7; });
+console.log('风机叶轮节点:', fanBlades.length);
+
+const state = { rotate: false, shadow: true, fog: true, fan: true };
 const sw = (id, key, fn) => {
   const el = $(id);
   el.addEventListener('click', () => {
@@ -331,6 +339,7 @@ const sw = (id, key, fn) => {
 sw('rotate', 'rotate', v => { controls.autoRotate = v; controls.autoRotateSpeed = 0.55; });
 sw('shadow', 'shadow', v => { renderer.shadowMap.enabled = v; sun.castShadow = v; });
 sw('fog', 'fog', v => { scene.fog = v ? new THREE.Fog(0xdfeaf6, 380, 1450) : null; });
+sw('fan', 'fan', v => { state.fan = v; });
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
@@ -359,6 +368,11 @@ renderer.setAnimationLoop(() => {
     camera.fov = THREE.MathUtils.lerp(camAnim.fromFov, camAnim.toFov, e);
     camera.updateProjectionMatrix();
     if (camAnim.t >= 1) camAnim = null;
+  }
+
+  if (state.fan && fanBlades.length) {
+    const step = fanSpeed * dt;
+    for (const b of fanBlades) b.rotateZ(step);
   }
 
   controls.update();
